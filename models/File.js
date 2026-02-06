@@ -18,7 +18,14 @@ const fileSchema = new mongoose.Schema({
     default: null
   },
 
-  userId: String
+  userId: String,
+
+  /* ===== SHARE FEATURE ===== */
+  shareToken: String,
+  isShared: {
+    type: Boolean,
+    default: false
+  }
 
 }, { timestamps: true });
 
