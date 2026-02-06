@@ -152,12 +152,15 @@ exports.publicDownload = async (req, res) => {
       Key: file.key,
       Expires: 60,
       ResponseContentDisposition: `inline; filename="${file.name}"`,
-      ResponseContentType: file.type,
+      ResponseContentType: file.type
     });
 
     res.redirect(signedUrl);
 
   } catch (err) {
+    console.error(err);
     res.status(500).send("Unable to open file");
   }
 };
+
+
