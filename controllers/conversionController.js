@@ -10,10 +10,11 @@ exports.pdfToWord = async (req, res) => {
   try {
     const file = await File.findById(req.params.id);
 
-    if (!file || !file.name.endsWith(".pdf"))
+    if (!file || !file.name.toLowerCase().endsWith(".pdf")) {
       return res.status(400).json({ msg: "Only PDF files allowed" });
+    }
 
-    // Create CloudConvert job
+    // 1️⃣ Create CloudConvert job
     const job = await cloudConvert.jobs.create({
       tasks: {
         importFile: {
@@ -37,15 +38,28 @@ exports.pdfToWord = async (req, res) => {
       }
     });
 
-    const exportTask = job.tasks.find(t => t.name === "exportFile");
+    // 2️⃣ WAIT for job to finish (THIS WAS MISSING)
+    const completedJob = await cloudConvert.jobs.wait(job.id);
+
+    // 3️⃣ Get export task safely
+    const exportTask = completedJob.tasks.find(
+      task => task.operation === "export/url"
+    );
+
+    if (!exportTask || !exportTask.result || !exportTask.result.files) {
+      return res.status(500).json({ msg: "Conversion failed at export step" });
+    }
+
     const docxUrl = exportTask.result.files[0].url;
 
-    // Download converted Word file
-    const response = await axios.get(docxUrl, { responseType: "arraybuffer" });
+    // 4️⃣ Download converted Word file
+    const response = await axios.get(docxUrl, {
+      responseType: "arraybuffer"
+    });
 
-    const key = `${uuid()}-${file.name.replace(".pdf", ".docx")}`;
+    const key = `${uuid()}-${file.name.replace(/\.pdf$/i, ".docx")}`;
 
-    // Upload DOCX to S3
+    // 5️⃣ Upload DOCX to S3
     await s3.upload({
       Bucket: process.env.AWS_BUCKET,
       Key: key,
@@ -54,9 +68,9 @@ exports.pdfToWord = async (req, res) => {
         "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     }).promise();
 
-    // Save DOCX metadata
+    // 6️⃣ Save DOCX metadata to DB
     const newFile = await File.create({
-      name: file.name.replace(".pdf", ".docx"),
+      name: file.name.replace(/\.pdf$/i, ".docx"),
       key,
       size: response.data.length,
       type:
@@ -67,7 +81,7 @@ exports.pdfToWord = async (req, res) => {
     res.json(newFile);
 
   } catch (err) {
-    console.error(err);
+    console.error("PDF → Word error:", err);
     res.status(500).json({ msg: "PDF to Word conversion failed" });
   }
 };
