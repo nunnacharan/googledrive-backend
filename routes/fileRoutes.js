@@ -11,22 +11,20 @@ const {
   deleteFile,
   renameFile,
   getFolders,
-  getFileUrl,
   shareFile,
   publicDownload
 } = require("../controllers/fileController");
 
-
-router.get("/", auth, getFiles);
-router.get("/folders", auth, getFolders);
-
-router.post("/upload", auth, uploadMiddleware.single("file"), uploadFile);
-router.post("/folder", auth, createFolder);
-
-router.delete("/:id", auth, deleteFile);
-router.put("/:id", auth, renameFile);
-router.post("/share/:id", auth, shareFile);
+/* ===== PUBLIC ROUTE (NO AUTH) ===== */
 router.get("/public/:token", publicDownload);
 
+/* ===== PROTECTED ROUTES ===== */
+router.get("/", auth, getFiles);
+router.get("/folders", auth, getFolders);
+router.post("/upload", auth, uploadMiddleware.single("file"), uploadFile);
+router.post("/folder", auth, createFolder);
+router.post("/share/:id", auth, shareFile);
+router.delete("/:id", auth, deleteFile);
+router.put("/:id", auth, renameFile);
 
 module.exports = router;
