@@ -104,7 +104,7 @@ exports.login = async (req, res) => {
     return res.status(400).json({ msg: "Invalid credentials" });
 
   if (!user.isActive)
-    return res.status(400).json({ msg: "Please activate your account" });
+    return res.status(400).json({ msg: "Please activate your account . Check in spam folder" });
 
   const match = await bcrypt.compare(password, user.password);
 
