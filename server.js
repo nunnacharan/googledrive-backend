@@ -50,6 +50,7 @@ app.use("/auth", require("./routes/authRoutes"));
 // 📁 Files (upload, folders, delete, rename)
 app.use("/files", require("./routes/fileRoutes"));
 
+app.use("/compress", require("./routes/compressRoutes"));
 
 /* =================================================
    HEALTH CHECK (optional but useful)
@@ -77,5 +78,6 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () =>
   console.log(`🚀 Server running on port ${PORT}`)
 );
+
 
 
