@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+
 const auth = require("../middleware/auth");
 
 const {
@@ -10,19 +11,22 @@ const {
   deleteFile,
   renameFile,
   getFolders,
-  getFileUrl
+  getFileUrl,
+  shareFile,
+  publicDownload
 } = require("../controllers/fileController");
+
 
 router.get("/", auth, getFiles);
 router.get("/folders", auth, getFolders);
-
-// ✅ NEW ROUTE
-router.get("/open/:id", auth, getFileUrl);
 
 router.post("/upload", auth, uploadMiddleware.single("file"), uploadFile);
 router.post("/folder", auth, createFolder);
 
 router.delete("/:id", auth, deleteFile);
 router.put("/:id", auth, renameFile);
+router.post("/share/:id", auth, shareFile);
+router.get("/public/:token", publicDownload);
+
 
 module.exports = router;
