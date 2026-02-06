@@ -162,5 +162,30 @@ exports.publicDownload = async (req, res) => {
     res.status(500).send("Unable to open file");
   }
 };
+/* =========================
+   OPEN / DOWNLOAD FILE
+========================= */
+exports.getFileUrl = async (req, res) => {
+  try {
+    const file = await File.findById(req.params.id);
+
+    if (!file)
+      return res.status(404).json({ msg: "File not found" });
+
+    const signedUrl = s3.getSignedUrl("getObject", {
+      Bucket: process.env.AWS_BUCKET,
+      Key: file.key,
+      Expires: 60,
+      ResponseContentDisposition: `attachment; filename="${file.name}"`
+    });
+
+    res.json({ url: signedUrl });
+
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: "Unable to download file" });
+  }
+};
+
 
 
